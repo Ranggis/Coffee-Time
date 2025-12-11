@@ -141,14 +141,6 @@ Struktur ini memastikan pemisahan yang jelas antara antarmuka, logika, dan aset.
 
 ---
 
-## Pengalaman Pengguna
-
-Coffee Time dirancang untuk memberikan pengalaman aplikasi yang sederhana namun efektif. Setiap tampilan dibuat agar mudah dipahami oleh pengguna awam maupun admin.
-
-Form yang rapi, halaman yang terstruktur, dan navigasi yang jelas menjadi inti dari desain aplikasi. Dengan alur transaksi yang teratur, pengguna dapat menyelesaikan pemesanan tanpa kebingungan. Sementara itu, admin dapat mengelola seluruh aktivitas melalui dashboard dengan tampilan terorganisir.
-
----
-
 ## Kontributor
 
 Pengembangan aplikasi Coffee Time dikerjakan oleh tim berikut:
