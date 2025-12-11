@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Admin - Coffee Time</title>
+  <link rel="stylesheet" href="styles/dashboard.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+    .table-responsive { width: 100%; overflow-x: auto; }
+    .price-text {
+        font-weight: bold; color: #2e7d32; background: #e8f5e9;
+        padding: 4px 8px; border-radius: 6px; font-size: 0.9rem; white-space: nowrap;
+    }
+    .time-text { font-size: 0.85rem; color: #888; }
+    table { width: 100%; border-collapse: collapse; min-width: 600px; }
+    td { padding: 15px 10px; vertical-align: middle; border-bottom: 1px solid #eee; }
+    th { padding: 15px 10px; text-align: left; background: #f9f9f9; color: #555; }
+    .loading-stat { font-size: 1.5rem; color: #ccc; }
+  </style>
+</head>
+
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <h2>Coffee Time</h2>
+    <nav>
+      <a href="dashboard.html" class="active">Dashboard</a>
+      <a href="produk.html">Produk</a>
+      <a href="transaksi.html">Transaksi</a> 
+      <a href="analisis.html">Analisis</a>
+      <a href="pelanggan.html">Pelanggan</a>
+      <a href="#" onclick="logout()" style="color: #ff6b6b;">Logout</a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <header class="topbar">
+      <h1>Dashboard Admin</h1>
+      <span id="admin-name">Halo, Admin 👋</span>
+    </header>
+
+    <main>
+      <!-- Statistik Ringkas -->
+      <section class="stats-overview">
+        <div class="card stat">
+          <h3>Total Produk</h3>
+          <p id="stat-produk" class="loading-stat">...</p> 
+        </div>
+        <div class="card stat">
+          <h3>Total Transaksi</h3>
+          <p id="stat-transaksi" class="loading-stat">...</p>
+        </div>
+        <div class="card stat">
+          <h3>Total Pelanggan</h3>
+          <p id="stat-pelanggan" class="loading-stat">...</p> 
+        </div>
+        <div class="card stat">
+          <h3>Rating Rata-rata</h3>
+          <p>4.8 ⭐</p>
+        </div>
+      </section>
+
+      <!-- Grafik & Analisis -->
+      <section class="chart-section card">
+        <div class="section-header">
+          <h3>Grafik Penjualan</h3>
+          <span class="subtitle">Performa per hari</span>
+        </div>
+        <canvas id="salesChart"></canvas>
+      </section>
+
+      <section class="sentiment-section card">
+        <div class="section-header">
+          <h3>Sentimen Pelanggan</h3>
+          <span class="subtitle">Ulasan & Rating</span>
+        </div>
+        <div class="sentiment-stats">
+          <p>👍 Positif: <strong>75%</strong></p>
+          <p>😐 Netral: <strong>20%</strong></p>
+          <p>👎 Negatif: <strong>5%</strong></p>
+        </div>
+        <div class="bar">
+          <div class="pos"></div>
+          <div class="neu"></div>
+          <div class="neg"></div>
+        </div>
+      </section>
+
+      <!-- Rekomendasi -->
+      <section class="card recommendations">
+        <div class="section-header">
+          <h3>Produk Populer</h3>
+          <span class="subtitle">Top selling items</span>
+        </div>
+        <ul>
+          <li>1. Caramel Latte</li>
+          <li>2. Cappuccino</li>
+          <li>3. Vanilla Cold Brew</li>
+        </ul>
+      </section>
+
+      <!-- TABEL PESANAN TERBARU -->
+      <section class="card orders">
+        <div class="section-header">
+          <h3>Pesanan Terbaru</h3>
+          <span class="subtitle">5 Transaksi terakhir</span>
+        </div>
+        
+        <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th width="40%">Nama Pemesan</th>
+                  <th width="30%">Total Harga</th>
+                  <th width="30%">Waktu</th>
+                </tr>
+              </thead>
+              <tbody id="recent-orders-table">
+                <tr><td colspan="3" style="text-align:center;">Memuat data...</td></tr>
+              </tbody>
+            </table>
+        </div>
+      </section>
+      
+    </main>
+  </div>
+
+  <script src="scripts/dashboard.js"></script>
+
+  <!-- SCRIPT LOGIKA UTAMA -->
+  <script>
+    
+    const API_URL = 'http://localhost/Coffee-Time-Website-main/api/get_dashboard_data.php';
+
+    // 1. Cek Login Admin (Pakai LocalStorage)
+    const role = localStorage.getItem('role');
+    const username = localStorage.getItem('username');
+
+    if (role !== 'admin') {
+        alert("Akses Ditolak! Anda bukan admin.");
+        window.location.href = 'login.html';
+    } else {
+        document.getElementById('admin-name').innerText = `Halo, ${username} 👋`;
+    }
+
+    // 2. Fetch Data Dashboard
+    fetch(API_URL)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Update Statistik
+                document.getElementById('stat-produk').innerText = data.stats.total_produk;
+                document.getElementById('stat-transaksi').innerText = data.stats.total_transaksi;
+                document.getElementById('stat-pelanggan').innerText = data.stats.total_pelanggan;
+
+                // Update Tabel Pesanan Terbaru
+                const tableBody = document.getElementById('recent-orders-table');
+                tableBody.innerHTML = ''; // Bersihkan loading
+
+                if (data.recent_orders.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Belum ada pesanan.</td></tr>';
+                } else {
+                    data.recent_orders.forEach(order => {
+                        const tr = `
+                            <tr>
+                                <td>
+                                    <strong style="color:#333; font-size:0.95rem; text-transform:capitalize;">
+                                        ${order.display_name}
+                                    </strong>
+                                </td>
+                                <td>
+                                    <span class="price-text">
+                                        Rp ${parseInt(order.total_bayar).toLocaleString('id-ID')}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="time-text">
+                                        ${order.formatted_date}
+                                    </span>
+                                </td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += tr;
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching dashboard data:', error);
+        });
+
+    // 3. Fungsi Logout
+    function logout() {
+        localStorage.clear();
+        window.location.href = 'login.html';
+    }
+  </script>
+
+</body>
+</html>

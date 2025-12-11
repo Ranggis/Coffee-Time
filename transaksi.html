@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Riwayat Transaksi - Admin</title>
+  <link rel="stylesheet" href="styles/dashboard.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <style>
+    .table-container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .table-responsive { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; min-width: 700px; }
+    th { background-color: #f8f9fa; color: #444; font-weight: 700; padding: 15px; text-align: left; }
+    td { padding: 15px; border-bottom: 1px solid #eee; vertical-align: top; }
+    
+    .menu-badge { display: inline-block; background-color: #fff3e0; color: #e65100; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 500; margin-right: 6px; margin-bottom: 6px; border: 1px solid #ffe0b2; white-space: nowrap; }
+    .price-badge { font-weight: bold; color: #2e7d32; background: #e8f5e9; padding: 6px 12px; border-radius: 8px; white-space: nowrap; }
+    .time-text { color: #888; font-size: 0.85rem; margin-top: 4px; display: block; white-space: nowrap; }
+    .user-login-info { font-size: 0.75rem; color: #999; display: block; margin-top: 4px; font-weight: normal; }
+    .loading-text { text-align:center; padding:20px; color:#888; }
+  </style>
+</head>
+
+<body>
+
+  <aside class="sidebar">
+    <h2>Coffee Time</h2>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="produk.html">Produk</a>
+      <a href="transaksi.html" class="active">Transaksi</a> 
+      <a href="analisis.html">Analisis</a>
+      <a href="pelanggan.html">Pelanggan</a>
+      <a href="#" onclick="logout()" style="color: #ff6b6b;">Logout</a>
+    </nav>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <h1>Data Transaksi</h1>
+      <span id="admin-name">Halo, Admin</span>
+    </header>
+
+    <main>
+      <section class="table-container">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div>
+                <h3 style="margin:0;">Semua Pesanan Masuk</h3>
+                <p style="margin:5px 0 0; color:#888; font-size:0.9rem;">Daftar riwayat pembelian (Full Name dari Checkout).</p>
+            </div>
+            <button onclick="window.print()" style="background:#333; color:white; border:none; padding:10px 20px; border-radius:6px; cursor:pointer;">🖨️ Cetak Data</button>
+        </div>
+        
+        <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th width="5%">No</th>
+                  <th width="18%">Waktu Order</th>
+                  <th width="20%">Nama Pemesan (Struk)</th>
+                  <th width="40%">Detail Menu</th>
+                  <th width="17%">Total Bayar</th>
+                </tr>
+              </thead>
+              <tbody id="transaksi-list">
+                <tr><td colspan="5" class="loading-text">Memuat data transaksi...</td></tr>
+              </tbody>
+            </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // ============================================================
+    // GANTI DENGAN URL API CPANEL KAMU
+    // ============================================================
+    const API_URL = 'http://localhost/coffee-time-website-main/api/get_transactions.php';
+
+    // 1. Cek Login Admin
+    const role = localStorage.getItem('role');
+    const username = localStorage.getItem('username');
+    if (role !== 'admin') window.location.href = 'login.html';
+    document.getElementById('admin-name').innerText = `Halo, ${username}`;
+
+    // 2. Fetch Data Transaksi
+    fetch(API_URL)
+        .then(res => {
+            if (!res.ok) throw new Error("Gagal mengambil data");
+            return res.json();
+        })
+        .then(data => {
+            const list = document.getElementById('transaksi-list');
+            list.innerHTML = '';
+
+            if (data.length === 0) {
+                list.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px;">Belum ada transaksi.</td></tr>';
+                return;
+            }
+
+            data.forEach((trx, index) => {
+                // Generate Menu Badge
+                let menuHtml = '';
+                trx.menu_items.forEach(menu => {
+                    menuHtml += `<span class='menu-badge'>${menu}</span>`;
+                });
+
+                const row = `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>
+                            <span style="font-weight:500; color:#333; white-space:nowrap;">
+                                ${trx.formatted_date}
+                            </span>
+                            <span class="time-text">${trx.formatted_time}</span>
+                        </td>
+                        <td>
+                            <span style="font-weight:600; text-transform:capitalize; font-size:1.05em; color:#333;">
+                                ${trx.display_name}
+                            </span>
+                            <span class="user-login-info">Akun: ${trx.username}</span>
+                        </td>
+                        <td>${menuHtml}</td>
+                        <td>
+                            <span class="price-badge">Rp ${trx.total_bayar.toLocaleString('id-ID')}</span>
+                        </td>
+                    </tr>
+                `;
+                list.innerHTML += row;
+            });
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('transaksi-list').innerHTML = 
+                '<tr><td colspan="5" style="color:red; text-align:center;">Gagal memuat data. Cek Console.</td></tr>';
+        });
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = 'login.html';
+    }
+  </script>
+
+</body>
+</html>

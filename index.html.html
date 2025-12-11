@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coffee Time ☕ - User Dashboard</title>
+  
+  <link rel="stylesheet" href="styles/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script defer src="scripts/script.js"></script>
+
+  <style>
+      .btn-disabled { background-color: #ccc !important; cursor: not-allowed; pointer-events: none; }
+      .stock-label { font-size: 0.8rem; color: #d84315; margin-top: 5px; display: block; }
+      .loading-text { text-align:center; padding: 20px; font-size:1.2rem; color:#888; }
+      
+      /* Pastikan Modal tersembunyi saat awal */
+      .modal { display: none; }
+      .modal[aria-hidden="false"] { display: flex; }
+
+      /* Style Tambahan untuk List Keranjang */
+      .cart-item-row {
+          display: flex; 
+          justify-content: space-between; 
+          align-items: center; 
+          border-bottom: 1px solid #eee; 
+          padding: 10px 0;
+      }
+      .cart-remove-btn {
+          color: red; 
+          cursor: pointer; 
+          font-size: 0.8rem; 
+          text-decoration: underline;
+          margin-left: 10px;
+      }
+  </style>
+</head>
+<body>
+  
+  <!-- Navbar -->
+  <header id="navbar">
+    <div class="logo">CoffeeTime</div>
+    <nav>
+      <ul>
+        <li><a href="#hero">Home</a></li>
+        <li><a href="#menu">Menu</a></li>
+        <li><a href="#about">About</a></li>
+        
+        <!-- Area User Dinamis -->
+        <li id="user-area"><a href="login.html" class="btn">Login</a></li>
+      </ul>
+    </nav>
+    <!-- Update onclick ke openCartModal -->
+    <div class="cart-icon" id="cartButton" onclick="openCartModal()">
+      🛒 <span id="cart-count">0</span>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section id="hero">
+    <div class="hero-content">
+      <h1>Wake Up & Smell The Coffee</h1>
+      <p>Start your day with the perfect cup brewed just for you.</p>
+      <a href="#menu" class="btn">Explore Menu</a>
+    </div>
+  </section>
+
+  <!-- Menu -->
+  <section id="menu">
+    <h2>Our Menu</h2>
+    <div class="menu-container" id="menu-list">
+      <div class="loading-text">Sedang memuat menu...</div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section id="about">
+    <div class="about-img">
+      <img src="assets/image/logo.png" alt="Coffee Shop" />
+    </div>
+    <div class="about-text">
+      <h2>About Us</h2>
+      <p>We are passionate coffee lovers crafting the finest blends. Every bean tells a story, and every cup brings warmth and comfort.</p>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section id="contact">
+    <h2>Contact Us</h2>
+    <form id="contact-form">
+      <input type="text" id="name" placeholder="Your Name" required />
+      <input type="email" id="email" placeholder="Your Email" required />
+      <textarea id="message" rows="4" placeholder="Your Message" required></textarea>
+      <button type="submit" class="btn">Send Message</button>
+    </form>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 CoffeeTime. All Rights Reserved.</p>
+  </footer>
+
+  <!-- ================= MODAL ORDER (Untuk Tambah Item) ================= -->
+  <div id="orderModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+      <span class="close-btn" id="orderClose">&times;</span>
+      <h3 id="modal-title">Order</h3>
+      <p id="modal-desc" class="muted">Pilihan terbaik untukmu.</p>
+      <div id="modal-rating" class="rating-stars">⭐⭐⭐⭐⭐</div>
+      
+      <p id="modal-price" class="muted" style="margin-top:8px; font-weight:bold;" data-price="0"></p>
+
+      <div class="qty-control">
+        <button id="qty-decrease" class="qty-btn">−</button>
+        <input type="number" id="quantity" min="1" value="1" readonly />
+        <button id="qty-increase" class="qty-btn">+</button>
+      </div>
+
+      <div class="modal-actions">
+        <button id="confirmOrder" class="btn">Confirm</button>
+        <button id="cancelOrder" class="btn secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL KERANJANG (CART LIST BARU) ================= -->
+  <div id="cartListModal" class="modal" aria-hidden="true">
+    <div class="modal-content cart-content" style="max-width: 500px;">
+      <span class="close-btn" onclick="closeCartModal()">&times;</span>
+      
+      <h3 style="border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 15px;">
+        Keranjang Belanja 🛒
+      </h3>
+
+      <!-- Tempat List Barang Muncul -->
+      <div id="cart-list-container" style="max-height: 300px; overflow-y: auto; margin-bottom: 15px;">
+        <!-- Item akan diisi oleh Javascript -->
+        <p style="text-align:center; color:#888;">Keranjang kosong.</p>
+      </div>
+
+      <!-- Total Harga -->
+      <div style="display:flex; justify-content:space-between; align-items:center; font-size:1.1rem; font-weight:bold; margin-bottom: 20px;">
+        <span>Total Bayar:</span>
+        <span id="cart-grand-total" style="color:#2e7d32;">Rp 0</span>
+      </div>
+
+      <!-- Tombol Aksi -->
+      <div class="modal-actions" style="justify-content: space-between; display: flex; gap: 10px;">
+        <button onclick="clearCart()" class="btn secondary" style="background:#d33; color:white; border:none; padding: 10px;">Hapus Semua</button>
+        <button onclick="proceedToCheckout()" class="btn" style="background:#b6895b; color:white; padding: 10px;">Lanjut Pembayaran →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- === SCRIPT LOGIKA UTAMA === -->
+  <script>
+    // ============================================================
+    // UPDATE URL SESUAI LOCALHOST KAMU
+    // ============================================================
+    const API_URL = 'http://localhost/coffee-time-website-main/api/get_products.php';
+
+    // --- 1. CEK LOGIN & NAVBAR ---
+    const username = localStorage.getItem('username');
+    const userArea = document.getElementById('user-area');
+
+    if (username) {
+        userArea.innerHTML = `
+            <a href="#" style="color:#b6895b; font-weight:bold; margin-right:10px;">Hi, ${username}</a>
+            <a href="#" onclick="logout()" style="color:red;">Logout</a>
+        `;
+    }
+
+    // --- 2. AMBIL MENU DARI API ---
+    fetch(API_URL)
+        .then(response => {
+            if(!response.ok) throw new Error("Gagal ambil data");
+            return response.json();
+        })
+        .then(products => {
+            const container = document.getElementById('menu-list');
+            container.innerHTML = ''; 
+
+            if (products.length === 0) {
+                container.innerHTML = "<p style='text-align:center; width:100%;'>Menu belum tersedia.</p>";
+                return;
+            }
+
+            products.forEach(prod => {
+                const stok = parseInt(prod.stock);
+                const isSoldOut = stok <= 0;
+                
+                const btnClass = isSoldOut ? "order-btn btn btn-disabled" : "order-btn btn";
+                const btnText  = isSoldOut ? "Sold Out" : "Order";
+                
+                // PENTING: Kirim parameter ke fungsi JS
+                const onclickEvent = isSoldOut ? "" : `onclick="event.stopPropagation(); checkLoginAndOrder('${prod.name}', ${prod.price}, '${prod.image}')"`;
+                
+                let stockLabel = (!isSoldOut && stok < 10) ? `<span class="stock-label">Sisa stok: ${stok}</span>` : '';
+
+                const htmlItem = `
+                    <div class="menu-item">
+                        <img src="${prod.image}" alt="${prod.name}">
+                        <h3>${prod.name}</h3>
+                        <p>${prod.description}</p>
+                        ${stockLabel}
+                        <button class="${btnClass}" ${onclickEvent}>${btnText}</button>
+                    </div>
+                `;
+                container.innerHTML += htmlItem;
+            });
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('menu-list').innerHTML = "<p style='text-align:center; color:red;'>Gagal memuat menu. Cek koneksi API.</p>";
+        });
+
+    // --- 3. LOGIKA POP-UP ORDER (SINGLE ITEM) ---
+    const modal = document.getElementById('orderModal');
+    const titleEl = document.getElementById('modal-title');
+    const priceEl = document.getElementById('modal-price');
+    const qtyInput = document.getElementById('quantity');
+    
+    function checkLoginAndOrder(name, price, img) {
+        const userId = localStorage.getItem('user_id');
+        if (userId) {
+            openOrderModal(name, price, img);
+        } else {
+            Swal.fire({
+                title: 'Login Dulu!',
+                text: 'Silakan login untuk memesan.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Login',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) window.location.href = 'login.html';
+            });
+        }
+    }
+
+    function openOrderModal(name, price, img) {
+        titleEl.innerText = name;
+        priceEl.innerText = "Rp " + parseInt(price).toLocaleString('id-ID');
+        priceEl.dataset.rawPrice = price;
+        qtyInput.value = 1;
+        modal.style.display = 'flex';
+        modal.setAttribute('aria-hidden', 'false');
+    }
+
+    document.getElementById('orderClose').onclick = () => modal.style.display = 'none';
+    document.getElementById('cancelOrder').onclick = () => modal.style.display = 'none';
+    
+    document.getElementById('qty-increase').onclick = function() {
+        qtyInput.value = parseInt(qtyInput.value) + 1;
+    }
+    document.getElementById('qty-decrease').onclick = function() {
+        if(qtyInput.value > 1) qtyInput.value = parseInt(qtyInput.value) - 1;
+    }
+
+    // --- 4. ADD TO CART ---
+    document.getElementById('confirmOrder').onclick = function() {
+        const name = titleEl.innerText;
+        const price = parseInt(priceEl.dataset.rawPrice);
+        const qty = parseInt(qtyInput.value);
+
+        let cart = JSON.parse(localStorage.getItem('coffee_cart')) || [];
+        const existingItem = cart.find(item => item.name === name);
+        if(existingItem) {
+            existingItem.quantity += qty;
+        } else {
+            cart.push({ name: name, price: price, quantity: qty });
+        }
+
+        localStorage.setItem('coffee_cart', JSON.stringify(cart));
+        modal.style.display = 'none';
+        updateCartCount();
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'Masuk Keranjang',
+            text: `${qty}x ${name} ditambahkan!`,
+            timer: 1500,
+            showConfirmButton: false
+        });
+    }
+
+    // --- 5. LOGIKA MODAL KERANJANG (CART LIST) ---
+    
+    function openCartModal() {
+        const userId = localStorage.getItem('user_id');
+        if (!userId) {
+            Swal.fire('Login Dulu', 'Silakan login untuk melihat keranjang.', 'warning');
+            return;
+        }
+
+        const cart = JSON.parse(localStorage.getItem('coffee_cart')) || [];
+        const container = document.getElementById('cart-list-container');
+        const totalEl = document.getElementById('cart-grand-total');
+        const cartModal = document.getElementById('cartListModal');
+
+        container.innerHTML = ''; 
+        let total = 0;
+
+        if (cart.length === 0) {
+            container.innerHTML = '<p style="text-align:center; padding:20px; color:#888;">Belum ada menu yang dipilih.</p>';
+            totalEl.innerText = "Rp 0";
+        } else {
+            cart.forEach((item, index) => {
+                const subtotal = item.price * item.quantity;
+                total += subtotal;
+
+                const itemHtml = `
+                    <div class="cart-item-row">
+                        <div>
+                            <strong style="display:block; font-size:1rem;">${item.name}</strong>
+                            <span style="color:#666; font-size:0.85rem;">
+                                ${item.quantity} x Rp ${item.price.toLocaleString('id-ID')}
+                            </span>
+                        </div>
+                        <div style="text-align:right;">
+                            <span style="display:block; font-weight:bold; color:#333;">Rp ${subtotal.toLocaleString('id-ID')}</span>
+                            <span class="cart-remove-btn" onclick="removeItem(${index})">Hapus</span>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += itemHtml;
+            });
+            totalEl.innerText = "Rp " + total.toLocaleString('id-ID');
+        }
+
+        cartModal.style.display = 'flex';
+    }
+
+    function closeCartModal() {
+        document.getElementById('cartListModal').style.display = 'none';
+    }
+
+    function removeItem(index) {
+        let cart = JSON.parse(localStorage.getItem('coffee_cart')) || [];
+        cart.splice(index, 1);
+        localStorage.setItem('coffee_cart', JSON.stringify(cart));
+        openCartModal(); // Refresh tampilan modal
+        updateCartCount();
+    }
+
+    function clearCart() {
+        if(confirm("Yakin ingin mengosongkan keranjang?")) {
+            localStorage.removeItem('coffee_cart');
+            openCartModal();
+            updateCartCount();
+        }
+    }
+
+    function proceedToCheckout() {
+        const cart = JSON.parse(localStorage.getItem('coffee_cart')) || [];
+        if (cart.length === 0) {
+            Swal.fire('Keranjang Kosong', 'Pilih menu dulu sebelum bayar.', 'info');
+        } else {
+            closeCartModal();
+            // Simpan data agar siap di checkout page
+            // (Checkout page bisa baca 'coffee_cart' dari localStorage juga)
+            window.location.href = 'checkout.html';
+        }
+    }
+
+    function updateCartCount() {
+        let cart = JSON.parse(localStorage.getItem('coffee_cart')) || [];
+        const total = cart.reduce((sum, item) => sum + item.quantity, 0);
+        document.getElementById('cart-count').innerText = total;
+    }
+    
+    // --- 6. LOGOUT ---
+    function logout() {
+        localStorage.clear();
+        window.location.href = 'DashboardUser.html';
+    }
+
+    // Jalankan saat load
+    updateCartCount();
+  </script>
+
+</body>
+</html>

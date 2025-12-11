@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Coffee Time</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* Style Sederhana untuk Login */
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #eee; }
+        .box { background: white; padding: 30px; border-radius: 8px; width: 300px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        input { width: 90%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
+        button { width: 100%; padding: 10px; background: #b6895b; color: white; border: none; cursor: pointer; border-radius: 5px; font-weight: bold; }
+        button:disabled { background: #ccc; }
+        .footer-link { margin-top: 15px; font-size: 14px; }
+        a { color: #b6895b; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h3 style="color:#b6895b;">Login Member</h3>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit" id="btnLogin">Masuk</button>
+        </form>
+        
+        <div class="footer-link">
+            <p>Belum punya akun? <a href="register.html">Daftar disini</a></p>
+            <a href="DashboardUser.html">Kembali ke Home</a>
+        </div>
+    </div>
+
+    <script>
+        // === GANTI URL INI DENGAN ALAMAT CPANEL KAMU ===
+          const BASE_URL = "http://localhost/coffee-time-website-main/api"; 
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnLogin');
+            btn.innerText = "Loading..."; btn.disabled = true;
+
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+
+            fetch(`${BASE_URL}/login.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, password: pass })
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.innerText = "Masuk"; btn.disabled = false;
+                
+                if(data.status === 'success') {
+                    // Simpan data ke browser
+                    localStorage.setItem('user_id', data.user_id);
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('role', data.role);
+
+                    Swal.fire('Berhasil', 'Login Sukses!', 'success').then(() => {
+                        if(data.role === 'admin') {
+                           
+                            window.location.href = "http://localhost/Coffee-Time-Website-main/dashboard.html";
+                        } else {
+                            // User ke Dashboard HTML
+                            window.location.href = "DashboardUser.html";
+                        }
+                    });
+                } else {
+                    Swal.fire('Gagal', data.message, 'error');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                btn.innerText = "Masuk"; btn.disabled = false;
+                Swal.fire('Error', 'Gagal koneksi ke server', 'error');
+            });
+        });
+    </script>
+</body>
+</html>

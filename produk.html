@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manajemen Produk - Admin</title>
+  
+  <link rel="stylesheet" href="styles/dashboard.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <style>
+    .table-container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; min-width: 600px; }
+    th { background: #f8f9fa; padding: 15px; text-align: left; color: #444; }
+    td { padding: 15px; border-bottom: 1px solid #eee; vertical-align: middle; }
+    .thumb-img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
+    .input-stock { width: 70px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; text-align: center; font-weight: bold; }
+    .btn-save { background: #2e7d32; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 0.85rem; margin-left: 5px; }
+    .btn-save:hover { background: #1b5e20; }
+    .badge-danger { color: red; font-weight: bold; font-size: 0.8rem; display: block; margin-top: 5px; }
+  </style>
+</head>
+
+<body>
+
+  <aside class="sidebar">
+    <h2>Coffee Time</h2>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="produk.html" class="active">Produk</a>
+      <a href="transaksi.html">Transaksi</a>
+      <a href="analisis.html">Analisis</a>
+      <a href="pelanggan.html">Pelanggan</a>
+      <a href="#" onclick="logout()" style="color: #ff6b6b;">Logout</a>
+    </nav>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <h1>Manajemen Produk</h1>
+      <span id="admin-name">Halo, Admin</span>
+    </header>
+
+    <main>
+      <section class="table-container">
+        <h3>Daftar Menu & Stok</h3>
+        <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Gambar</th>
+                  <th>Nama Produk</th>
+                  <th>Harga</th>
+                  <th>Atur Stok</th>
+                </tr>
+              </thead>
+              <tbody id="product-list">
+                <tr><td colspan="5" style="text-align:center; padding:20px;">Sedang memuat data...</td></tr>
+              </tbody>
+            </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // ============================================================
+    // URL API (Sesuai yang kamu tes tadi)
+    // ============================================================
+    const API_URL_GET = 'http://localhost/coffee-time-website-main/api/get_products.php';
+    const API_URL_UPDATE = 'http://localhost/coffee-time-website-main/api/update_stock.php';
+
+    // 1. Cek Login Admin
+    const role = localStorage.getItem('role');
+    if (role !== 'admin') {
+        alert("Akses Ditolak");
+        window.location.href = 'login.html';
+    }
+    document.getElementById('admin-name').innerText = "Halo, " + localStorage.getItem('username');
+
+    // 2. Ambil Data Produk
+    fetch(API_URL_GET)
+        .then(response => {
+            // Cek apakah server merespon dengan OK (200)
+            if (!response.ok) {
+                throw new Error("Gagal terhubung ke API: " + response.statusText);
+            }
+            return response.json();
+        })
+        .then(products => {
+            const list = document.getElementById('product-list');
+            list.innerHTML = ''; // Bersihkan loading
+
+            // Debugging: Cek data di Console F12
+            console.log("Data Produk Diterima:", products);
+
+            if (products.length === 0) {
+                list.innerHTML = '<tr><td colspan="5" style="text-align:center;">Data kosong.</td></tr>';
+                return;
+            }
+
+            products.forEach((prod, index) => {
+                // Pastikan tipe data angka
+                const stok = parseInt(prod.stock);
+                const harga = parseInt(prod.price);
+                
+                // Cek path gambar (hapus backslash jika ada)
+                const imgPath = prod.image.replace(/\\/g, ''); 
+
+                let badge = '';
+                if(stok === 0) badge = '<span class="badge-danger">⚠️ Stok Habis!</span>';
+                else if(stok < 10) badge = '<span class="badge-danger" style="color:#f57c00;">⚠️ Stok Menipis</span>';
+
+                list.innerHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td><img src="${imgPath}" class="thumb-img" alt="${prod.name}" onerror="this.src='assets/image/logo.png'"></td>
+                        <td>
+                            <strong>${prod.name}</strong>
+                            ${badge}
+                        </td>
+                        <td>Rp ${harga.toLocaleString('id-ID')}</td>
+                        <td>
+                            <div style="display:flex; align-items:center;">
+                                <input type="number" id="stok-${prod.id}" class="input-stock" value="${stok}" min="0">
+                                <button onclick="updateStock(${prod.id})" class="btn-save">💾 Update</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('product-list').innerHTML = 
+                `<tr><td colspan="5" style="color:red; text-align:center;">
+                    Gagal memuat data! <br> 
+                    Pastikan XAMPP nyala dan folder project benar.<br>
+                    <small>${err.message}</small>
+                </td></tr>`;
+        });
+
+    // 3. Fungsi Update Stok
+    function updateStock(id) {
+        const input = document.getElementById(`stok-${id}`);
+        const newStock = input.value;
+        const btn = input.nextElementSibling;
+
+        btn.innerText = "...";
+        btn.disabled = true;
+
+        fetch(API_URL_UPDATE, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id, stock: newStock })
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.innerText = "💾 Update";
+            btn.disabled = false;
+
+            if(data.status === 'success') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: 'Stok telah diperbarui',
+                    timer: 1000,
+                    showConfirmButton: false
+                }).then(() => location.reload());
+            } else {
+                Swal.fire('Gagal', data.message || 'Terjadi kesalahan', 'error');
+            }
+        })
+        .catch(err => {
+            btn.innerText = "💾 Update";
+            btn.disabled = false;
+            Swal.fire('Error', 'Tidak bisa konek ke server', 'error');
+        });
+    }
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = 'login.html';
+    }
+  </script>
+
+</body>
+</html>

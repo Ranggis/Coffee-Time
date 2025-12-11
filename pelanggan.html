@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Pelanggan - Admin</title>
+  
+  <link rel="stylesheet" href="styles/dashboard.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <style>
+      .table-container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+      .table-responsive { width: 100%; overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; margin-top: 15px; min-width: 800px; }
+      th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; vertical-align: top; }
+      th { background-color: #f8f9fa; color: #444; font-weight: 700; }
+      
+      /* Badge Total Transaksi */
+      .badge-trx { background: #e3f2fd; color: #1565c0; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; white-space: nowrap; }
+      
+      /* Badge Menu (Akumulasi) */
+      .menu-accumulated { display: inline-block; background-color: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; padding: 4px 10px; border-radius: 6px; font-size: 0.85rem; margin-right: 5px; margin-bottom: 5px; font-weight: 500; white-space: nowrap; }
+      
+      .loading-text { text-align: center; padding: 30px; color: #888; }
+  </style>
+</head>
+
+<body>
+
+  <aside class="sidebar">
+    <h2>Coffee Time</h2>
+    <nav>
+      <!-- Pastikan link mengarah ke file HTML -->
+      <a href="dashboard.html">Dashboard</a>
+      <a href="produk.html">Produk</a>
+      <a href="transaksi.html">Transaksi</a>
+      <a href="analisis.html">Analisis</a>
+      <a href="pelanggan.html" class="active">Pelanggan</a>
+      <a href="#" onclick="logout()" style="color: #ff6b6b;">Logout</a>
+    </nav>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <h1>Data Pelanggan</h1>
+      <span id="admin-name">Halo, Admin</span>
+    </header>
+
+    <main>
+      <section class="table-container">
+        <h3>Aktivitas Belanja Pelanggan</h3>
+        <p style="color:gray; font-size:14px; margin-bottom:20px;">Total akumulasi barang yang dibeli oleh setiap pengguna.</p>
+
+        <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th width="5%">No</th>
+                  <th width="20%">Nama Pelanggan</th>
+                  <th width="15%">Bergabung</th>
+                  <th width="15%">Total Checkout</th>
+                  <th width="45%">Total Barang Dibeli (Seumur Hidup)</th>
+                </tr>
+              </thead>
+              <tbody id="customer-list">
+                <tr><td colspan="5" class="loading-text">Memuat data pelanggan...</td></tr>
+              </tbody>
+            </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // ============================================================
+    // GANTI DENGAN URL API CPANEL KAMU
+    // ============================================================
+    const API_URL = 'http://localhost/coffee-time-website-main/api/get_customers.php';
+
+    // 1. Cek Login Admin
+    const role = localStorage.getItem('role');
+    const username = localStorage.getItem('username');
+    if (role !== 'admin') window.location.href = 'login.html';
+    document.getElementById('admin-name').innerText = `Halo, ${username}`;
+
+    // 2. Fetch Data Pelanggan
+    fetch(API_URL)
+        .then(res => {
+            if(!res.ok) throw new Error("Gagal mengambil data");
+            return res.json();
+        })
+        .then(data => {
+            const list = document.getElementById('customer-list');
+            list.innerHTML = '';
+
+            if (data.length === 0) {
+                list.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px;">Belum ada pelanggan terdaftar.</td></tr>';
+                return;
+            }
+
+            data.forEach((cust, index) => {
+                // LOGIKA JS: Menghitung Akumulasi Barang
+                // Data mentah: "Espresso:1||Latte:2||Espresso:1"
+                let summaryHtml = '';
+                
+                if (cust.data_belanjaan) {
+                    let summaryObj = {};
+                    let items = cust.data_belanjaan.split('||'); // Pecah berdasarkan ||
+
+                    items.forEach(itemStr => {
+                        let parts = itemStr.split(':'); // Pecah Nama dan Qty
+                        if(parts.length === 2) {
+                            let name = parts[0];
+                            let qty = parseInt(parts[1]);
+
+                            // Masukkan ke object summary
+                            if (summaryObj[name]) {
+                                summaryObj[name] += qty;
+                            } else {
+                                summaryObj[name] = qty;
+                            }
+                        }
+                    });
+
+                    // Loop object summary untuk jadi HTML badge
+                    for (let [name, totalQty] of Object.entries(summaryObj)) {
+                        summaryHtml += `<span class='menu-accumulated'><b>${totalQty}x</b> ${name}</span>`;
+                    }
+                } else {
+                    summaryHtml = "<span style='color:#ccc; font-style:italic;'>Belum pernah memesan.</span>";
+                }
+
+                // Render Baris Tabel
+                const row = `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>
+                            <strong style="font-size:1.05em; text-transform:capitalize;">
+                                ${cust.username}
+                            </strong>
+                        </td>
+                        <td style="color:#666; font-size:0.9em;">
+                            ${cust.formatted_date}
+                        </td>
+                        <td>
+                            ${cust.jumlah_checkout > 0 
+                                ? `<span class="badge-trx">${cust.jumlah_checkout}x Transaksi</span>` 
+                                : `<span style="color:#ccc;">-</span>`
+                            }
+                        </td>
+                        <td style="line-height:1.6;">
+                            ${summaryHtml}
+                        </td>
+                    </tr>
+                `;
+                list.innerHTML += row;
+            });
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('customer-list').innerHTML = 
+                '<tr><td colspan="5" style="color:red; text-align:center;">Gagal memuat data. Cek Console.</td></tr>';
+        });
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = 'login.html';
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Daftar Akun</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* Gunakan style yang sama dengan login */
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #eee; }
+        .box { background: white; padding: 30px; border-radius: 8px; width: 300px; text-align: center; }
+        input { width: 90%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
+        button { width: 100%; padding: 10px; background: #b6895b; color: white; border: none; cursor: pointer; border-radius: 5px; font-weight: bold; }
+        a { color: #b6895b; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h3 style="color:#b6895b;">Buat Akun Baru</h3>
+        <form id="registerForm">
+            <input type="text" id="username" placeholder="Username Baru" required>
+            <input type="password" id="password" placeholder="Password Baru" required>
+            <button type="submit" id="btnReg">Daftar</button>
+        </form>
+        <p style="font-size:14px;">Sudah punya akun? <a href="login.html">Login</a></p>
+    </div>
+
+    <script>
+        // === GANTI URL INI ===
+       const BASE_URL = "http://localhost/coffee-time-website-main/api"; 
+
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnReg');
+            btn.innerText = "Loading..."; btn.disabled = true;
+
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+
+            fetch(`${BASE_URL}/register.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, password: pass })
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.innerText = "Daftar"; btn.disabled = false;
+                if(data.status === 'success') {
+                    Swal.fire('Berhasil', 'Akun dibuat! Silakan login.', 'success').then(() => {
+                        window.location.href = "login.html";
+                    });
+                } else {
+                    Swal.fire('Gagal', data.message, 'error');
+                }
+            })
+            .catch(err => {
+                btn.innerText = "Daftar"; btn.disabled = false;
+                Swal.fire('Error', 'Gagal koneksi ke server', 'error');
+            });
+        });
+    </script>
+</body>
+</html>
