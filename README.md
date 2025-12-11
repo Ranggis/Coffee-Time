@@ -1,7 +1,7 @@
 <h1 align="center">Coffee Time</h1>
 
 <p align="center">
-  <img src="https://github.com/Ranggis/Api-Image/blob/main/Logo.png" width="180" alt="SIG Logo"/>
+  <img src="https://github.com/Ranggis/Api-Image/blob/main/Coffee%20Time.png" width="180" alt="SIG Logo"/>
 </p>
 
 <p align="center">
