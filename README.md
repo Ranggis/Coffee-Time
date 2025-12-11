@@ -1,3 +1,10 @@
+<p align="center"> <img src="https://github.com/Ranggis/Api-Image/blob/main/coffee-logo.png" width="160" alt="Coffee Time Logo"/> </p> <p align="center"> <img src="https://img.shields.io/badge/Status-Active-brightgreen" /> <img src="https://img.shields.io/badge/PHP-8.x-blue" /> <img src="https://img.shields.io/badge/MySQL-Database-orange" /> <img src="https://img.shields.io/badge/Frontend-HTML%2FCSS%2FJS-yellow" /> </p>
+
+Aplikasi Coffee Time Website dikembangkan sebagai sistem pemesanan dan manajemen kedai kopi berbasis web yang modern dan responsif. Proyek ini dirancang untuk memberikan pengalaman pengguna yang praktis dan intuitif, baik untuk pelanggan yang ingin memesan produk maupun admin yang mengelola data operasional.
+
+Coffee Time tidak hanya menampilkan daftar menu, tetapi menghadirkan alur transaksi lengkap: mulai dari registrasi pengguna, login, pemilihan produk, checkout, hingga penyimpanan transaksi ke dalam database. Di sisi admin, sistem menyediakan dashboard yang tersusun rapi untuk mengelola produk, pelanggan, dan riwayat transaksi.
+
+Proyek ini menggabungkan desain visual yang bersih, struktur aplikasi yang terorganisir, serta implementasi backend yang efisien. Pendekatan ini menjadikan Coffee Time sebagai contoh aplikasi pemesanan berbasis web yang mudah digunakan, informatif, dan siap dikembangkan lebih lanjut untuk kebutuhan akademik maupun bisnis.
 # Coffee Time Website — Sistem Pemesanan dan Manajemen Kedai Kopi
 
 Aplikasi ini dikembangkan sebagai platform pemesanan dan manajemen produk untuk kedai kopi berbasis web. Coffee Time dibangun untuk memberikan pengalaman antarmuka yang modern, ringan, serta mudah dipahami baik oleh pelanggan maupun admin. Proyek ini menekankan pemisahan struktur frontend–backend, desain visual yang konsisten, dan alur transaksi yang jelas mulai dari login hingga checkout.
