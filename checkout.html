@@ -67,7 +67,7 @@
         </select>
 
         <button type="submit" id="btnPay">Bayar Sekarang</button>
-        <a href="DashboardUser.html" style="display:block; text-align:center; margin-top:15px; color:#8B4513; text-decoration:none;">&larr; Kembali ke Menu</a>
+        <a href="index.html" style="display:block; text-align:center; margin-top:15px; color:#8B4513; text-decoration:none;">&larr; Kembali ke Menu</a>
     </form>
   </div>
 
@@ -193,7 +193,7 @@
                     text: 'Terima kasih sudah memesan di Coffee Time.',
                     confirmButtonColor: '#8B4513'
                 }).then(() => {
-                    window.location.href = "DashboardUser.html";
+                    window.location.href = "index.html";
                 });
             } else {
                 Swal.fire('Gagal', data.message, 'error');
