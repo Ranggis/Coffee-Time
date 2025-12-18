@@ -1,5 +1,4 @@
 <h1 align="center">Coffee Time</h1>
-<p align="center">Web App Pemesanan dan Manajemen Kedai Kopi</p>
 
 <p align="center">
   <img src="https://github.com/Ranggis/Api-Image/blob/main/Coffee%20Time-modified.png"/>
