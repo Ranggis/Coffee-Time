@@ -2,7 +2,7 @@
 <p align="center">Web App Pemesanan dan Manajemen Kedai Kopi</p>
 
 <p align="center">
-  <img src="https://github.com/Ranggis/Api-Image/blob/main/coffee-logo.png" width="160" alt="Coffee Time Logo"/>
+  <img src="https://github.com/Ranggis/Api-Image/blob/main/Coffee%20Time-modified.png"/>
 </p>
 
 <p align="center">
